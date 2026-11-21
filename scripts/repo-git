@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GIT_DIR="$ROOT/.auto-branch-git"
+
+if [[ ! -d "$GIT_DIR" ]]; then
+  echo "Git metadata is not initialized. Run: scripts/repo-git init" >&2
+  exit 2
+fi
+
+exec git --git-dir="$GIT_DIR" --work-tree="$ROOT" "$@"

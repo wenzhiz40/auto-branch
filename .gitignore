@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.auto-branch/
+.planning/
+.phase0-*
+*.sqlite3
+.auto-branch-git/
