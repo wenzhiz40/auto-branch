@@ -27,5 +27,5 @@ else
   "$GIT" remote set-url origin "$REMOTE_URL"
 fi
 
-"$GIT" push -u origin "$BRANCH"
+"$GIT" push -u origin "$BRANCH" --follow-tags
 echo "Published branch '$BRANCH' to '$REMOTE_URL'."
