@@ -86,6 +86,8 @@ The result reports `branch_mode: seeded`; this is a new session seeded with cont
 
 The same flow works with `--platform claude`. The wrapper invokes the headless commands, parses the returned native session ID, writes it to the branch tree, and never retries a failed native command automatically because the Prompt may already have been delivered.
 
+Native calls default to a 300-second timeout. Override it with `--timeout SECONDS`. Prompts are sent through stdin for headless calls instead of being placed in the process argument list. If a native command returns a session ID but exits unsuccessfully, the branch is marked `delivery_unknown`; do not replay the Prompt automatically.
+
 `--mode manual` only classifies and does not invoke Codex or Claude. `--mode auto` skips confirmation for a high-confidence unrelated classification; it is opt-in and is not the default. The wrapper is a one-shot/headless entry point; it does not intercept text typed into an already-running interactive TUI.
 
 The default data directory is `.auto-branch`. Use `--data-dir` to choose another local directory.

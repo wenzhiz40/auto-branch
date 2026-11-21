@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from pathlib import Path
 
 from .classifier import Classifier, HeuristicClassifier
@@ -22,12 +23,12 @@ class AutoBranchService:
         active = self.storage.get_branch(self.storage.active_branch_id())
         if active is None:
             raise RuntimeError("active branch record is missing")
-        summary = active["summary"] or self.memory.read_branch_summary(active["id"])
+        summary = self.effective_summary(active)
         classification = self.classifier.classify(
             current_topic=active["topic"], current_summary=summary, prompt=prompt
         )
         decision = self.decisions.decide(classification, mode)
-        self.storage.record_routing_event(
+        operation_id = self.storage.record_routing_event(
             branch_id=active["id"],
             relationship=classification.relationship.value,
             proposed_action=decision.action.value,
@@ -35,7 +36,10 @@ class AutoBranchService:
             reason=classification.reason,
             prompt_digest=hashlib.sha256(prompt.encode()).hexdigest(),
         )
-        return decision
+        return replace(decision, operation_id=operation_id)
+
+    def effective_summary(self, branch: dict) -> str:
+        return branch["summary"] or self.memory.read_branch_summary(branch["id"])
 
     def create_branch(
         self,
@@ -45,6 +49,7 @@ class AutoBranchService:
         platform: str,
         native_session_id: str | None = None,
         summary: str = "",
+        status: BranchStatus = BranchStatus.ACTIVE,
     ) -> dict:
         parent_id = self.storage.active_branch_id()
         branch = self.storage.create_branch(
@@ -54,6 +59,7 @@ class AutoBranchService:
             platform=platform,
             native_session_id=native_session_id,
             summary=summary,
+            status=status,
         )
         if summary:
             self.memory.write_branch_summary(branch["id"], summary)

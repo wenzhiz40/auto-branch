@@ -90,6 +90,9 @@ Long-running research and development sessions accumulate unrelated questions. T
 - **FR-8 Idempotency:** Retrying a create, route, or adoption operation must not submit the same prompt twice or append the same adoption revision twice. Operations use stable request/operation IDs.
 - **FR-9 Auditability:** Record prompt-routing decisions, user overrides, native command outcomes, branch state changes, and adoption provenance. Do not log secrets; prompt logging is configurable and off by default beyond the minimal data needed for operation.
 - **FR-10 Safe failure:** If classifier, adapter, or persistence operations fail, preserve the user's prompt and show the failure. Do not silently discard input or claim a branch exists when native session creation failed.
+- **FR-11 Native execution safety:** Native commands have a configurable timeout, receive Prompt content through stdin where supported, and record `delivery_unknown` when a session ID exists but the native process exits unsuccessfully. Auto-Branch never retries an ambiguous Prompt delivery.
+- **FR-12 Routing audit:** A routing event records the operation ID, user choice, executed action, native session ID, exit code, and delivery status after native execution completes.
+- **FR-13 Concurrency:** Prompt routing serializes operations per data directory so concurrent wrappers cannot silently overwrite the active logical branch.
 
 ## 9. Non-Functional Requirements
 

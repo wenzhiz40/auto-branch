@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="native",
         help="native forks full history; seeded starts a new session with bounded Auto-Branch context",
     )
+    prompt.add_argument("--timeout", type=float, default=300.0, help="native CLI timeout in seconds")
 
     archive = sub.add_parser("archive")
     archive.add_argument("branch_id")
@@ -122,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(service.route(args.prompt, DecisionMode.MANUAL).as_dict(), ensure_ascii=False, indent=2))
             return 0
         try:
-            result = PromptRunner(service).run(
+            result = PromptRunner(service, timeout=args.timeout).run(
                 platform=args.platform,
                 prompt=args.prompt,
                 mode=DecisionMode(args.mode),
@@ -139,6 +140,7 @@ def main(argv: list[str] | None = None) -> int:
             "session_id": result.session_id,
             "returncode": result.returncode,
             "branch_mode": result.branch_mode,
+            "delivery_status": result.delivery_status,
             "stdout": result.stdout,
         }, ensure_ascii=False, indent=2))
         if result.returncode != 0:

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import fcntl
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -30,6 +32,16 @@ class Storage:
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         return connection
+
+    @contextmanager
+    def prompt_lock(self):
+        lock_path = self.root / "prompt.lock"
+        with lock_path.open("w", encoding="utf-8") as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _initialize(self) -> None:
         with self._connect() as db:
@@ -134,6 +146,7 @@ class Storage:
         native_session_id: str | None = None,
         branch_id: str | None = None,
         summary: str = "",
+        status: BranchStatus = BranchStatus.ACTIVE,
     ) -> dict[str, Any]:
         if self.get_branch(parent_id) is None:
             raise ValueError(f"parent branch does not exist: {parent_id}")
@@ -153,7 +166,7 @@ class Storage:
                     topic,
                     platform,
                     native_session_id,
-                    BranchStatus.ACTIVE.value,
+                    status.value,
                     summary,
                     now,
                     now,
@@ -185,14 +198,26 @@ class Storage:
             if result.rowcount != 1:
                 raise ValueError(f"branch does not exist: {branch_id}")
 
-    def bind_native_session(self, branch_id: str, platform: str, session_id: str) -> None:
+    def bind_native_session(
+        self,
+        branch_id: str,
+        platform: str,
+        session_id: str,
+        status: BranchStatus | None = None,
+    ) -> None:
         if not session_id.strip():
             raise ValueError("session id cannot be empty")
         with self._connect() as db:
-            result = db.execute(
-                "UPDATE branches SET platform = ?, native_session_id = ?, updated_at = ? WHERE id = ?",
-                (platform, session_id, utc_now(), branch_id),
-            )
+            if status is None:
+                result = db.execute(
+                    "UPDATE branches SET platform = ?, native_session_id = ?, updated_at = ? WHERE id = ?",
+                    (platform, session_id, utc_now(), branch_id),
+                )
+            else:
+                result = db.execute(
+                    "UPDATE branches SET platform = ?, native_session_id = ?, status = ?, updated_at = ? WHERE id = ?",
+                    (platform, session_id, status.value, utc_now(), branch_id),
+                )
             if result.rowcount != 1:
                 raise ValueError(f"branch does not exist: {branch_id}")
 
@@ -249,6 +274,30 @@ class Storage:
                 ),
             )
         return operation_id
+
+    def update_routing_event(
+        self,
+        operation_id: str,
+        *,
+        user_choice: str | None = None,
+        adapter_result: dict[str, Any] | None = None,
+    ) -> None:
+        with self._connect() as db:
+            result = db.execute(
+                """
+                UPDATE routing_events
+                SET user_choice = COALESCE(?, user_choice),
+                    adapter_result = COALESCE(?, adapter_result)
+                WHERE operation_id = ?
+                """,
+                (
+                    user_choice,
+                    json.dumps(adapter_result) if adapter_result is not None else None,
+                    operation_id,
+                ),
+            )
+            if result.rowcount != 1:
+                raise ValueError(f"routing event does not exist: {operation_id}")
 
     def record_adoption(
         self,

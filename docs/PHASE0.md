@@ -81,6 +81,8 @@ The MVP now includes `auto-branch prompt` and `bind-session`:
 
 The wrapper now supports `--branch-mode seeded`. Native mode keeps the verified platform fork behavior. Seeded mode starts a fresh native session with the `Branch Context` package and current Prompt, then registers it as a logical child. The inherited summary is capped at 12,000 characters. It is intentionally labeled as a new context-seeded session, not a transcript fork.
 
+The wrapper now also applies a 300-second default native timeout (configurable with `--timeout`), sends headless Prompt content through stdin, serializes routing per data directory, and records `delivery_unknown` when native session creation is visible but the process exits unsuccessfully.
+
 Live measurement passed: the user's seeded Codex turn used approximately 18.6K input tokens, compared with approximately 74.1K on native child resume (about 75% fewer input tokens). This is a single-run comparison, not a universal savings guarantee; the fresh session still includes the configured Codex/system context.
 
 ## Adapter Decision

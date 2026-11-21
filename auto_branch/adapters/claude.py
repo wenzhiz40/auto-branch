@@ -19,7 +19,7 @@ class ClaudeAdapter:
         command = ["claude", "--resume", session_id, "--fork-session"]
         if headless:
             command.extend(["--print", "--output-format", "json"])
-        if prompt:
+        elif prompt:
             command.append(prompt)
         return command
 
@@ -27,11 +27,11 @@ class ClaudeAdapter:
         command = ["claude", "--resume", session_id]
         if headless:
             command.extend(["--print", "--output-format", "json"])
-        if prompt:
+        elif prompt:
             command.append(prompt)
         return command
 
-    def build_start_command(self, prompt: str, session_id: str | None = None) -> list[str]:
+    def build_start_command(self, prompt: str | None = None, session_id: str | None = None) -> list[str]:
         session_id = session_id or str(uuid.uuid4())
         return [
             "claude",
@@ -40,7 +40,6 @@ class ClaudeAdapter:
             "--print",
             "--output-format",
             "json",
-            prompt,
         ]
 
     def version_command(self) -> list[str]:

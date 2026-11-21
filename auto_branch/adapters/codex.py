@@ -17,21 +17,21 @@ class CodexAdapter:
     def build_fork_command(self, session_id: str, prompt: str | None = None, *, headless: bool = True) -> list[str]:
         command = ["codex", "exec", "fork", session_id, "--skip-git-repo-check"] if headless else ["codex", "fork", session_id]
         if headless:
-            command.append("--json")
-        if prompt:
+            command.extend(["--json", "-"])
+        elif prompt:
             command.append(prompt)
         return command
 
     def build_resume_command(self, session_id: str, prompt: str | None = None, *, headless: bool = True) -> list[str]:
         command = ["codex", "exec", "resume", session_id, "--skip-git-repo-check"] if headless else ["codex", "resume", session_id]
         if headless:
-            command.append("--json")
-        if prompt:
+            command.extend(["--json", "-"])
+        elif prompt:
             command.append(prompt)
         return command
 
-    def build_start_command(self, prompt: str, session_id: str | None = None) -> list[str]:
-        return ["codex", "exec", "--skip-git-repo-check", "--json", prompt]
+    def build_start_command(self, prompt: str | None = None, session_id: str | None = None) -> list[str]:
+        return ["codex", "exec", "--skip-git-repo-check", "--json", "-"]
 
     def version_command(self) -> list[str]:
         return ["codex", "--version"]
