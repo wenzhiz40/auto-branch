@@ -101,3 +101,19 @@ python3 -m unittest discover -s tests -v
 ```
 
 The native CLI wrapper is intentionally not executed by the core tests. The current adapter uses `codex exec fork/resume --json` for headless Codex routing and `claude --print --resume --fork-session --output-format json` for headless Claude routing. Live routing still requires a valid persistent session and must be enabled only after version-specific integration tests.
+
+## Publishing
+
+For a normal clone, use standard Git commands. If the checkout was created in an environment with a read-only or invalid `.git` placeholder, this repository includes an external-metadata fallback:
+
+```bash
+scripts/repo-git init
+scripts/repo-git add .
+scripts/repo-git commit -m "Initial Auto-Branch alpha MVP"
+scripts/repo-git tag -a v0.1.0-alpha -m "Auto-Branch alpha MVP"
+scripts/repo-git remote add origin git@github.com:YOUR_USER/auto-branch.git
+scripts/repo-git push -u origin main
+scripts/repo-git push origin v0.1.0-alpha
+```
+
+The external metadata directory is `.auto-branch-git/` and is ignored. `scripts/publish-github.sh <remote-url>` can add/update `origin` and push `main` after the GitHub repository exists and credentials are available.

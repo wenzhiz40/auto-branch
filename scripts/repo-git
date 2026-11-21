@@ -4,6 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GIT_DIR="$ROOT/.auto-branch-git"
 
+if [[ "${1:-}" == "init" && ! -d "$GIT_DIR" ]]; then
+  git init --bare --initial-branch=main "$GIT_DIR" >/dev/null
+  git --git-dir="$GIT_DIR" config user.name "Auto-Branch Contributors"
+  git --git-dir="$GIT_DIR" config user.email "auto-branch@users.noreply.github.com"
+  echo "initialized external Git metadata at $GIT_DIR"
+  exit 0
+fi
+
 if [[ ! -d "$GIT_DIR" ]]; then
   echo "Git metadata is not initialized. Run: scripts/repo-git init" >&2
   exit 2
